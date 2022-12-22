@@ -1,5 +1,10 @@
 const express = require ("express")
+const dotenv = require("dotenv")
+const logger = require("./middleware/logger")
 const app=express()
+dotenv.config()
+
+app.use(logger)
 
 app.get("/greetings", (req,res)=>{
     return res.status(200).json({
