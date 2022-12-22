@@ -1,7 +1,9 @@
 const express = require('express')
 const dotenv = require('dotenv')
 const logger = require('./middleware/logger')
+const verifyAuth = require('./middleware/verifyAuth')
 const authRouter = require('./routes/authentication')
+const profileRouter = require('./routes/profile')
 const connectdb = require('./config/db')
 const app = express()
 dotenv.config()
@@ -17,6 +19,7 @@ app.get('/greetings', (req, res) => {
 })
 
 app.use('/api/auth', authRouter)
+app.use('/api/profile', profileRouter)
 
 app.listen(process.env.PORT, (error) => {
   if (error) {
