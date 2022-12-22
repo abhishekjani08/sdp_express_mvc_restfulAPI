@@ -2,11 +2,14 @@ const express = require('express')
 const dotenv = require('dotenv')
 const logger = require('./middleware/logger')
 const authRouter = require('./routes/authentication')
+const connectdb = require('./config/db')
 const app = express()
 dotenv.config()
+connectdb()
 
+app.use(express.urlencoded())
+app.use(express.json())
 app.use(logger)
-
 app.get('/greetings', (req, res) => {
   return res.status(200).json({
     message: 'Hello from Express Todo Project'
