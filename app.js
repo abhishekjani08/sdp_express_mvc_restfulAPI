@@ -6,7 +6,9 @@ const authRouter = require('./routes/authentication')
 const profileRouter = require('./routes/profile')
 const connectdb = require('./config/db')
 const app = express()
-dotenv.config()
+dotenv.config({
+  path: process.env.NODE_ENV === 'test' ? '.env.test' : '.env'
+})
 connectdb()
 
 app.use(express.urlencoded())
@@ -27,3 +29,5 @@ app.listen(process.env.PORT, (error) => {
   }
   console.log('Server is running on port no ' + process.env.PORT)
 })
+
+module.exports = app
