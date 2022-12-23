@@ -1,5 +1,5 @@
 const bcrypt = require('bcrypt')
-const jwt= require("jsonwebtoken")
+const jwt = require("jsonwebtoken")
 
 const encrypt = (text) => {
   return bcrypt.genSalt(5)
@@ -8,20 +8,24 @@ const encrypt = (text) => {
     })
 }
 
-const compare= (text,hash)=>{
-    return bcrypt.compare(text,hash)
+const compare = (text, hash) => {
+  return bcrypt.compare(text, hash)
 }
 
-const createAccessToken= (email)=>{
-    return jwt.sign({
-        email
-    },
-    'secret@123', 
+const createAccessToken = (email) => {
+  return jwt.sign({
+    email
+  },
+    'secret@123',
     {
-        expiresIn: 5*60
+      expiresIn: 5 * 60
     })
 }
 
+const generateOTP = () => {
+  return Math.floor(Math.random() * Math.pow(10, 6))
+}
+
 module.exports = {
-  encrypt,compare,createAccessToken
+  encrypt, compare, createAccessToken, generateOTP
 }
