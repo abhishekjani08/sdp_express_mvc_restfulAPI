@@ -1,82 +1,103 @@
-/* eslint-disable handle-callback-err */
-const { Router } = require('express')
-const users = require('../models/users')
-const { encrypt, compare,createAccessToken } = require('../utils')
+/* eslint-disable no-undef */
+const { Router } = require("express");
+const users = require("../models/users");
+const authRouter = Router();
+const verifyAuth = require("../middleware/verifyAuth");
+const { encrypt, compare, createAccessToken } = require("../utils");
+const sendMail = require("../config/mailer");
 
-const authRouter = Router()
-
-authRouter.post('/login', (req, res) => {
-
+authRouter.post("/login", (req, res) => {
   return Promise.resolve()
     .then(() => {
       if (!(req.body.email && req.body.password)) {
-        throw Error('email or password not found')
+        throw Error("email or password is not found");
       }
-      return users.findOne({ email: req.body.email })
+      return users.findOne({ email: req.body.email });
     })
     .then((data) => {
-      if(!data) {
-        throw Error('user not found')
+      if (!data) {
+        throw Error("User not found");
       }
-      return compare(req.body.password, data.password)
+      return compare(req.body.password, data.password);
     })
-
     .then((match) => {
       if (!match) {
-        throw Error('match not found')
+        throw Error("invalid password");
       }
       return res.status(200).json({
-        message: 'Login successful',
-        access_token:createAccessToken(req.body.email)
-      })
+        message: "login successful",
+        access_token: createAccessToken(req.body.email),
+      });
     })
-    .catch(error => {
+    .catch((error) => {
       return res.status(422).json({
-        message: 'login failed',
-        error: error.message
-      })
-    })
-})
+        message: "login failed",
+        error: error.message,
+      });
+    });
+});
 
-authRouter.post('/register', (req, res) => {
+authRouter.post("/register", (req, res) => {
+  let resData
   return Promise.resolve()
     .then(() => {
       if (!(req.body.email && req.body.userName && req.body.password)) {
-        throw Error('email,username,password not found')
+        throw Error("email, userName or password is not found");
       }
-      return encrypt(req.body.password)
+      return encrypt(req.body.password);
     })
     .then((hash) => {
-      req.body.password = hash
-      return users.create(req.body)
+      req.body.password = hash;
+      return users.create(req.body);
     })
-    .then(data => {
-      data = data.toJSON()
-      delete data.password
+    .then((data) => {
+      resData = data.toJSON();
+      delete resData.password;
 
-      data.access_token = createAccessToken(req.body.email)
+      resData.access_token = createAccessToken(req.body.email);
       
+      return sendMail(resData.email, resData.userName, resData.otp)
+
+    })
+    .then(() => {
+      delete resData.otp
       return res.status(200).json({
-        message: 'Registered Successfully',
-        data: data
-      })
-    })
-    .catch(error => {
-      return res.status(422).json({
-        message: 'register failed',
-        error: error.message
-      })
-    })
-})
-
-//   return res.status(200).json({
-//     message: 'Registered successful'
-//   })
-// })
-
-authRouter.post('/verify_email', (req, res) => {
-  return res.status(200).json({
-    message: 'Email Verified Successfully'
+      message: "registered successful",
+      data: resData,
+    });
   })
-})
-module.exports = authRouter
+  
+    .catch((error) => {
+      return res.status(422).json({
+        message: "register failed",
+        error: error.message,
+      });
+    });
+});
+authRouter.post("/verify", verifyAuth, (req, res) => {
+  return users
+    .findOne({ email: req.email }, { otp: 1 })
+    .then((data) => {
+      if (data.otp !== req.body.otp) {
+        throw Error("invalid otp");
+      }
+      return users.findOneAndUpdate(
+        { email: req.email },
+        { $set: { verified: true } }
+      );
+    })
+    .then((data) => {
+      return res.status(200).json({
+        message: "email verified successful",
+        data: data,
+      });
+    })
+    .catch((error) => {
+      return res.status(422).json({
+        message: "email not verified",
+        error: error.message,
+      });
+    });
+});
+
+module.exports = authRouter;

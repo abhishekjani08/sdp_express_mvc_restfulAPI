@@ -18,7 +18,7 @@ const createAccessToken = (email) => {
   },
     'secret@123',
     {
-      expiresIn: 5 * 60
+      expiresIn: 60 * 60
     })
 }
 
