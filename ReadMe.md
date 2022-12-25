@@ -13,3 +13,4 @@ Controllers act as an interface between Model and View components to process all
 ## Authorization<br>
 
 ## OTP Verification<br>
+>The OTP is sent via email to all the users.
